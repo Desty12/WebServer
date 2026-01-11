@@ -24,6 +24,7 @@ pthread_mutex_t qlock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MimeType::lock = PTHREAD_MUTEX_INITIALIZER;
 std::unordered_map<std::string, std::string> MimeType::mime;
 
+// 根据文件后缀，获取对应响应类型
 std::string MimeType::getMime(const std::string &suffix)
 {
     if (mime.size() == 0)
@@ -70,6 +71,7 @@ requestData::requestData(int _epollfd, int _fd, std::string _path):
     path(_path), fd(_fd), epollfd(_epollfd)
 {}
 
+//析构关闭对应socket描述符
 requestData::~requestData()
 {
     cout << "~requestData()" << endl;
@@ -92,15 +94,18 @@ void requestData::addTimer(mytimer *mtimer)
         timer = mtimer;
 }
 
+// 获取socket描述符fd
 int requestData::getFd()
 {
     return fd;
 }
+// 设置socket描述符fd
 void requestData::setFd(int _fd)
 {
     fd = _fd;
 }
 
+// 数据还原到初始状态
 void requestData::reset()
 {
     againTimes = 0;
@@ -265,11 +270,12 @@ void requestData::handleRequest()
     }
 }
 
+// 解析url
 int requestData::parse_URI()
 {
     string &str = content;
     // 读到完整的请求行再开始解析请求
-    int pos = str.find('\r', now_read_pos);
+    int pos = str.find('\r', now_read_pos);   // "找到回车符\r"
     if (pos < 0)
     {
         return PARSE_URI_AGAIN;
@@ -299,7 +305,7 @@ int requestData::parse_URI()
         method = METHOD_GET;
     }
     //printf("method = %d\n", method);
-    // filename
+    // get request filename
     pos = request_line.find("/", pos);
     if (pos < 0)
     {
@@ -321,7 +327,6 @@ int requestData::parse_URI()
                     file_name = file_name.substr(0, __pos);
                 }
             }
-                
             else
                 file_name = "index.html";
         }
@@ -355,6 +360,7 @@ int requestData::parse_URI()
     return PARSE_URI_SUCCESS;
 }
 
+// 解析url的header
 int requestData::parse_Headers()
 {
     string &str = content;

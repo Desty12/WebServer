@@ -69,12 +69,12 @@ private:
     int fd;
     int epollfd;
     // content的内容用完就清
-    std::string content;
-    int method;
+    std::string content;         // 读取到的内容
+    int method;                  // http请求方式，Get/Post
     int HTTPversion;
     std::string file_name;
-    int now_read_pos;
-    int state;
+    int now_read_pos;           // 当前读取到的pos位置
+    int state;                  // https/http请求状态
     int h_state;
     bool isfinish;
     bool keep_alive;

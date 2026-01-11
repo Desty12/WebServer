@@ -47,7 +47,8 @@ int socket_bind_listen(int port)
         return -1;
 
     // 消除bind时"Address already in use"错误
-    int optval = 1;
+    int optval = 1; // 启用套接字重用
+    /* 这将启用套接字地址重用，允许多个套接字绑定到相同的地址。 */
     if(setsockopt(listen_fd, SOL_SOCKET,  SO_REUSEADDR, &optval, sizeof(optval)) == -1)
         return -1;
 
@@ -190,25 +191,28 @@ void handle_expired_event()
 
 int main()
 {
-    handle_for_sigpipe();
-    int epoll_fd = epoll_init();
+    handle_for_sigpipe();        // 注册信号处理函数，忽略管道信号
+    int epoll_fd = epoll_init(); // 
     if (epoll_fd < 0)
     {
         perror("epoll init failed");
         return 1;
     }
     threadpool_t *threadpool = threadpool_create(THREADPOOL_THREAD_NUM, QUEUE_SIZE, 0);
+    // 创建socket，进行bind和listen
     int listen_fd = socket_bind_listen(PORT);
     if (listen_fd < 0) 
     {
         perror("socket bind failed");
         return 1;
     }
+    // 为listen_fd设置非阻塞模式
     if (setSocketNonBlocking(listen_fd) < 0)
     {
         perror("set socket non block failed");
         return 1;
     }
+    // 设置epoll为边缘触发模式：仅在IO变化时触发（高性能场景），默认为水平触发EPOLLIN：文件描述符有变化触发（一般场景）
     __uint32_t event = EPOLLIN | EPOLLET;
     requestData *req = new requestData();
     req->setFd(listen_fd);
